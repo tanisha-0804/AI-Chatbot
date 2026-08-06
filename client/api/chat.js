@@ -1,56 +1,38 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
 
 export default async function handler(req, res) {
-
   if (req.method !== "POST") {
     return res.status(405).json({
-      message: "Method not allowed"
+      error: "Method Not Allowed",
     });
   }
 
   try {
-
     const { message } = req.body;
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENROUTER_API_KEY,
-      baseURL: "https://openrouter.ai/api/v1",
+    if (!message) {
+      return res.status(400).json({
+        error: "Message is required",
+      });
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: message,
     });
 
-
-    const response = await openai.chat.completions.create({
-
-      model: process.env.MODEL,
-
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful AI assistant."
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-
-      temperature: 0.7
+    return res.status(200).json({
+      reply: response.text,
     });
+  } catch (error) {
+    console.error("Gemini Error:", error);
 
-
-    res.status(200).json({
-      success: true,
-      reply: response.choices[0].message.content
+    return res.status(500).json({
+      reply: "❌ Oops! Something went wrong while connecting to Gemini.",
     });
-
-
-  } catch(error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success:false,
-      message:"AI server error"
-    });
-
   }
 }
