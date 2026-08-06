@@ -1,2 +1,10 @@
-[functions]
-directory = "netlify/functions"
+[build]
+  command = "cd client && npm install && npm run build"
+  publish = "client/dist"
+  functions = "netlify/functions"
+
+# Ensures React Router client-side routing works on page refreshes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

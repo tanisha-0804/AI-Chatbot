@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
-
-dotenv.config();
+dotenv.config(); // 👈 MUST BE FIRST!
 
 import app from "./app.js";
 

@@ -1,9 +1,17 @@
 export const sendMessageToAI = async (message) => {
   try {
-    const response = await fetch('/.netlify/functions/chat', {
-      method: 'POST',
+    // Determine the API endpoint:
+    // Uses localhost:5000 when running 'npm run dev' locally,
+    // and '/.netlify/functions/chat' when deployed on Netlify.
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const endpoint = isLocal 
+      ? "http://localhost:5000/api/chat" 
+      : "/.netlify/functions/chat";
+
+    const response = await fetch(endpoint, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ message }),
     });
@@ -14,9 +22,9 @@ export const sendMessageToAI = async (message) => {
     }
 
     const data = await response.json();
-    return data.reply || data.choices?.[0]?.message?.content;
+    return data.reply;
   } catch (error) {
     console.error("API Service Error:", error);
-    throw error; // Passes error to Home.jsx to display in chat
+    throw error;
   }
 };

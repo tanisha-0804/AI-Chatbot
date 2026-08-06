@@ -1,16 +1,15 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
-export async function handler(event) {
+export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: JSON.stringify({
-        error: "Method not allowed",
-      }),
+      body: JSON.stringify({ error: "Method Not Allowed" }),
     };
   }
 
@@ -20,32 +19,29 @@ export async function handler(event) {
     if (!message) {
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          error: "Message is required",
-        }),
+        body: JSON.stringify({ error: "Message is required" }),
       };
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: message,
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: message }],
+      model: "llama-3.3-70b-versatile",
     });
+
+    const reply = completion.choices[0]?.message?.content || "No response received";
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        reply: response.text,
-      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reply }),
     };
-
   } catch (error) {
-    console.error("Gemini Error:", error);
-
+    console.error("Netlify Function Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: "AI connection failed",
-      }),
+      body: JSON.stringify({ error: "Failed to generate AI response" }),
     };
   }
-}
+};
